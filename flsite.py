@@ -13,14 +13,6 @@ if not os.path.exists(os.path.join(app.root_path, 'flsite.db')):
     create_db(app, os.path.join(app.root_path, 'sq_db.sql'))
 
 
-MENU = [
-    {'name': 'Home', 'url': '/'},
-    {'name': 'Contact us', 'url': '/contact'},
-    {'name': 'About', 'url': '/about'},
-    {'name': 'Login', 'url': '/login'}
-]
-
-
 def get_db():
     # open DB connection
     if not hasattr(g, 'link_db'):
@@ -44,6 +36,32 @@ def current_db():
 def index():
     context = {'menu': current_db().getMenu(), 'title': 'Home'}
     return render_template('index.html', **context)
+
+
+@app.route('/add_post', methods=['POST', 'GET'])
+def add_post():
+    if request.method == 'POST':
+        post_title = request.form.get('post_title')
+        post_content = request.form.get('post_content')
+        if post_title and post_content:
+            is_post_added = current_db().addPost(post_title, post_content)
+            if is_post_added is True:
+                flash('Post added', category='success')
+            else:
+                flash('Post adding error', category='error')
+
+    context = {'menu': current_db().getMenu(), 'title': 'Add post'}
+    return render_template('add_post.html', **context)
+
+
+@app.route('/post/<int:post_id>')
+def show_post(post_id):
+    post_title, post_content = current_db().getPost(post_id)
+    if not post_title:
+        abort(404)
+
+    context = {'menu': current_db().getMenu(), 'title': post_title, 'post_content': post_content}
+    return render_template('post.html', **context)
 
 
 @app.route('/about')
