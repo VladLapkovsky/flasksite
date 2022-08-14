@@ -42,7 +42,7 @@ ul.mainmenu li a:hover {
 }
 
 div.content {
-	margin: 0px 0px 0px 20px;
+	margin: 0px 20px 0px 20px;
 }
 
 .form-contact label {
@@ -61,7 +61,13 @@ div.content {
 	color: #CC0000;
 }
 
-.flash {padding: 10px;}
+.flash {
+    padding: 0px 0px 0px 0px;
+    height: 40px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
 .flash.success {
 	border: 1px solid #21DB56;
 	background: #AEFFC5;
