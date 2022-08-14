@@ -37,8 +37,14 @@ def contact():
         else:
             flash('Sending error', category='error')
 
-    context = {'menu': MENU, 'title': 'About'}
+    context = {'menu': MENU, 'title': 'Contact-us'}
     return render_template('contact.html', **context)
+
+
+@app.errorhandler(404)
+def page_not_found(error):
+    context = {'menu': MENU, 'title': 'Page not found'}
+    return render_template('page404.html', **context), 404
 
 
 # with app.test_request_context():
