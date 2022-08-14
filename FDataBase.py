@@ -10,13 +10,14 @@ class FDataBase:
 
     def getMenu(self):
         sql_query = 'SELECT * FROM mainmenu'
-        result = []
         try:
             self.__cursor.execute(sql_query)
             result = self.__cursor.fetchall()
+            if result:
+                return result
         except Exception as e:
             print('Error occurred while reading DB: ', e)
-        return result
+        return []
 
     def addPost(self, post_title, post_content):
         sql_query = 'INSERT INTO posts VALUES(NULL, ?, ?, ?)'
@@ -35,12 +36,13 @@ class FDataBase:
 
     def getPost(self, post_id):
         sql_query = 'SELECT title, text FROM posts WHERE id = ? LIMIT 1'
-        result = False, False
         try:
             self.__cursor.execute(sql_query, (post_id,))
             result = self.__cursor.fetchone()
+            if result:
+                return result
         except Exception as e:
             print('Error occurred while reading post from DB: ', e)
-        return result
+        return False, False
 
 
