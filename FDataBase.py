@@ -42,7 +42,16 @@ class FDataBase:
             if result:
                 return result
         except Exception as e:
-            print('Error occurred while reading post from DB: ', e)
+            print(f'Error occurred while getting post with id {post_id} from DB: ', e)
         return False, False
 
-
+    def getPostsAnnounce(self):
+        sql_query = 'SELECT id, title, text FROM posts ORDER BY time DESC'
+        try:
+            self.__cursor.execute(sql_query)
+            result = self.__cursor.fetchall()
+            if result:
+                return result
+        except Exception as e:
+            print('Error occurred while getting posts from DB: ', e)
+        return []

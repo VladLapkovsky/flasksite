@@ -34,7 +34,7 @@ def current_db():
 
 @app.route('/')
 def index():
-    context = {'menu': current_db().getMenu(), 'title': 'Home'}
+    context = {'menu': current_db().getMenu(), 'title': 'Home', 'posts': current_db().getPostsAnnounce()}
     return render_template('index.html', **context)
 
 
