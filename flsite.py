@@ -2,20 +2,21 @@ from flask import Flask, render_template, url_for
 
 app = Flask(__name__)
 
-MENU = ['Install', 'First app', 'Contact us']
-
+MENU = [
+    {'name': 'Install', 'url': 'install-flask'},
+    {'name': 'First app', 'url': 'first-app'},
+    {'name': 'Contact us', 'url': 'contact'}
+]
 
 @app.route('/')
 def index():
     context = {'menu': MENU, 'title': 'Home'}
-    print(f"{url_for('index')=}")
     return render_template('index.html', **context)
 
 
 @app.route('/about')
 def about():
     context = {'menu': MENU, 'title': 'About'}
-    print(f"{url_for('about')=}")
     return render_template('about.html', **context)
 
 
