@@ -1,26 +1,39 @@
+import os
+from db import create_db, connect_db
 from flask import (
-    Flask,
-    render_template,
-    url_for,
-    request,
-    session,
-    flash,
-    redirect,
-    abort
+    Flask, render_template, url_for, request, session, flash, redirect, abort, g
 )
-from credentials import PROJECT_SECRET_KEY
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = PROJECT_SECRET_KEY
+app.config.from_object('config.Config')
+
+app.config.update(dict(DATABASE=os.path.join(app.root_path, 'flsite.db')))
+if not os.path.exists(os.path.join(app.root_path, 'flsite.db')):
+    create_db(app, os.path.join(app.root_path, 'sq_db.sql'))
 
 
 MENU = [
-    {'name': 'Install', 'url': 'install-flask'},
-    {'name': 'First app', 'url': 'first-app'},
-    {'name': 'Contact us', 'url': 'contact'},
-    {'name': 'About', 'url': 'about'},
-    {'name': 'Login', 'url': 'login'}
+    {'name': 'Home', 'url': '/'},
+    {'name': 'Install', 'url': '/install-flask'},
+    {'name': 'First app', 'url': '/first-app'},
+    {'name': 'Contact us', 'url': '/contact'},
+    {'name': 'About', 'url': '/about'},
+    {'name': 'Login', 'url': '/login'}
 ]
+
+
+def get_db():
+    # open DB connection
+    if not hasattr(g, 'link_db'):
+        g.link_db = connect_db(app)
+    return g.link_db
+
+
+@app.teardown_appcontext
+def close_db(error):
+    # close DB connection
+    if hasattr(g, 'link_db'):
+        g.link_db.close()
 
 
 @app.route('/')
