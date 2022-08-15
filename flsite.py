@@ -43,8 +43,9 @@ def add_post():
     if request.method == 'POST':
         post_title = request.form.get('post_title')
         post_content = request.form.get('post_content')
+        post_url = request.form.get('post_url')
         if post_title and post_content:
-            is_post_added = current_db().addPost(post_title, post_content)
+            is_post_added = current_db().addPost(post_title, post_content, post_url)
             if is_post_added is True:
                 flash('Post added', category='success')
             else:
@@ -54,9 +55,9 @@ def add_post():
     return render_template('add_post.html', **context)
 
 
-@app.route('/post/<int:post_id>')
-def show_post(post_id):
-    post_title, post_content = current_db().getPost(post_id)
+@app.route('/post/<string:post_url>')
+def show_post(post_url):
+    post_title, post_content = current_db().getPost(post_url)
     if not post_title:
         abort(404)
 

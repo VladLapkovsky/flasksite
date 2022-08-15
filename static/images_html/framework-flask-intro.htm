@@ -1,0 +1,150 @@
+<p>For those who don't
+quite familiar with the principle of interaction between the client (browser) and
+framework installed on the server, I will describe this process in a nutshell.
+
+<p>When a user enters a query string into the browser, such as vk.com, the browser sends a request to the server where the site is located and running. Here we put aside the issue of routing and DNS servers,
+it doesn't matter now, the main thing is that the Internet is designed in such a way that routers
+“know” where to send requests if they are related to live sites.
+
+<p align=center><img width=623 height=327 id="Figure 4" src="framework-flask-intro.files/image001.jpg">
+
+<p>The server is constantly
+is in the waiting mode for the next request and as soon as it arrives,
+generates a response to the client, usually in the form of an HTML document. This
+the document is returned to the browser and the user sees on the device screen
+promised page.
+
+<p>But where in
+this whole framework scheme? Actually it is installed on the server. Because
+this is an ordinary computer (well, maybe not quite ordinary, but the principle is the same), then on
+it has the appropriate software installed. Again, we will not
+here go deeply into details, I will only say that they often
+install Linux-like OS
+(due to their reliability), then a program called a web server (often Apache or Nginx) and already he
+delegates request processing to a specific framework:
+
+<p align=center><img width=623 height=291 id="Figure 7" src="framework-flask-intro.files/image002.jpg">
+
+<p>Here WSGI (Web Server Gateway Interface) is a standard
+interactions between a Python program running on
+server side, and the web server itself, such as Apache. Actually,
+is the Python interpreter that runs the WSGI application,
+written in Flask.
+
+<p>At admission
+request, the WSGI application is activated, a certain
+handler, which is also called "View" and implemented in the form
+functions in Python. Accordingly, if it comes immediately
+multiple requests, then the same handler function can be run in
+parallel streams. Multithreading is the norm for frameworks, therefore,
+When working with views in Flask, you should always keep this in mind.
+
+<p>Of course, in
+as part of our lessons, we will not use a remote server and install
+on it, this framework is a separate task. By the way, modern hosts
+provide tools to easily install and configure Flask. Therefore this
+the process is not very difficult. And to study this package on
+home PC, you only need to install it using the pip installer:
+
+<p align=center>pip install Flask
+
+<p>Now we can
+write your first WSGI application. In the simplest version
+it looks like this:
+
+<p>from flask import Flask
+<br>
+<br>app = Flask(__name__)
+<br>
+<br>if __name__ == "__main__":
+<br>app.run(debug=True)
+
+<p>First comes
+Flask class import which,
+actually forms this application. Next, we create an instance of this class
+and the first argument should be the name of our application. If the whole program
+is written in one file, then the __name__ directive should be passed, which in
+in case of import it will contain the name of the current file, and in case of independent
+startup - the value "__main__". For Flask this has
+of fundamental importance, in particular, it depends on where to look for subdirectories with
+templates and static documents.
+
+<p>After that
+the framework is launched by the run method and as a parameter
+debug=True is specified so that we are in the browser
+have seen all the errors that will occur when developing an application site. Of course,
+after its creation, debug=False should be written here to
+random errors the real user has not seen.
+
+<p>And finally,
+condition. Why is it? See, when we directly run our module, then
+the __name__ directive will be
+take the value "__main__" and the local web server will be started
+to debug the current application. If the module is run, for example, on
+remote server, then we do not need to start another server. In this case
+the __name__ directive will be
+take the name of this module and the line app.run failed
+will be. That is, we registered this condition in order to launch the application
+directly on the local device.
+
+<p>Accordingly, as
+as soon as the framework is running, our local web server is activated and we can
+in the browser, create a request using the following starting address:
+
+<p align=center>http://127.0.0.1:5000/
+
+<p>Let's do it
+this and see what happens. Let's type the specified request in the browser and see,
+that the requested page was not found:
+
+<p align=center><img width=623 height=174 id="Figure 8" src="framework-flask-intro.files/image003.jpg">
+
+<p>That's right, and
+must be, since we have not yet created a single view in the program.
+Let's do this, add it:
+
+<p>@app.route(&quot;/&quot;)
+<br>defindex():
+<br> return &quot;index&quot;
+
+<p>Here
+a special route decorator is used, which
+creates a wrapper around our index function, which will
+be activated when accessing the main page of the site, that is, upon request http://127.0.0.1:5000/
+
+<p>Launch
+program, refresh the page and now in the browser we see what returned
+index function:
+
+<p align=center><img width=623 height=174 id="Figure 11" src="framework-flask-intro.files/image004.jpg">
+
+<p>Often back to main page
+The page is also accessed by index, that is:
+
+<p align=center>domain/index
+
+<p>for example,
+
+<p align=center>proproprogs.ru/index
+
+<p>To one and the same
+to display the same page at multiple URLs, you should add
+several route constructs:
+
+<p>@app.route(&quot;/index&quot;)
+<br>@app.route(&quot;/&quot;)
+<br>defindex():
+<br> return &quot;index&quot;
+
+<p>Accordingly,
+for any other address, we can also add our own handler,
+writing another route decorator:
+
+<p>@app.route(&quot;/about&quot;)
+<br>def about():
+<br> return &quot;&lt;h1&gt;About&lt;/h1&gt;&quot;
+
+<p>Now on our
+The site is like two pages: main and /about - about the site. Moreover,
+our handlers return an HTML document and all tags will be
+respectively displayed on the page in the browser.
