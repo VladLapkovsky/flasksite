@@ -25,6 +25,13 @@ class FDataBase:
     def addPost(self, post_title, post_content, post_url):
         if self._is_post_url_exists(post_url):
             return False
+
+        base_path = url_for('static', filename='images_html')
+        post_content = re.sub(
+            r"(?P<tag><img\s+[^>]*src=)(?P<quote>[\"'])(?P<url>.+?)(?P=quote)>",
+            "\\g<tag>" + base_path + "/\\g<url>>",
+            post_content
+        )
         sql_query = 'INSERT INTO posts VALUES(NULL, ?, ?, ?, ?)'
         post_adding_time = math.floor(time.time())
         result = False
@@ -45,13 +52,7 @@ class FDataBase:
             self.__cursor.execute(sql_query)
             result = self.__cursor.fetchone()
             if result:
-                base_path = url_for('static', filename='images_html')
-                text = re.sub(
-                    r"(?P<tag><img\s+[^>]*src=)(?P<quote>[\"'])(?P<url>.+?)(?P=quote)>",
-                    "\\g<tag>" + base_path + "/\\g<url>>",
-                    result['text']
-                )
-                return result['title'], text
+                return result
         except Exception as e:
             print(f'Error occurred while getting post with URL {post_url} from DB: ', e)
         return False, False
