@@ -4,8 +4,9 @@ from flask import (
     Flask, render_template, url_for, request, session, flash, redirect, abort, g, make_response
 )
 from FDataBase import FDataBase
+from werkzeug.security import generate_password_hash, check_password_hash
+from config import APP_DATABASE, COOKIE_LOGGED
 
-APP_DATABASE = None
 
 app = Flask(__name__)
 app.config.from_object('config.Config')
@@ -138,7 +139,7 @@ def about():
 
 @app.route('/profile/<username>')
 def profile(username):
-    if 'userLogged' not in session or session.get('userLogged') != username:
+    if COOKIE_LOGGED not in session or session.get(COOKIE_LOGGED) != username:
         abort(401)
     context = {'menu': APP_DATABASE.getMenu(), 'title': 'Profile', 'username': username}
     return render_template('profile.html', **context)
@@ -156,15 +157,48 @@ def contact():
     return render_template('contact.html', **context)
 
 
+@app.route('/register', methods=['POST', 'GET'])
+def register():
+    print(request.method)
+    if request.method == 'POST':
+        username = request.form.get('username')
+        email = request.form.get('email')
+        password1 = request.form.get('password1')
+        password2 = request.form.get('password2')
+        if username and email:
+            msg = ''
+            if password1 != password2:
+                msg = "Passwords don't match"
+            else:
+                hashed_password = generate_password_hash(password1)
+                user_added, msg = APP_DATABASE.addUser(username, email, hashed_password)
+                if user_added is True:
+                    flash('Registration succeed', 'success')
+                    return redirect(url_for('login'))
+            flash(f'Registration error: {msg}', 'error')
+
+        else:
+            flash('Wrong filled fields', 'error')
+    context = {'menu': APP_DATABASE.getMenu(), 'title': 'Register'}
+    return render_template('register.html', **context)
+
+
 @app.route('/login', methods=['POST', 'GET'])
 def login():
-    if session.get('userLogged') and request.cookies.get('logged'):
-        return redirect(url_for('profile', username=session['userLogged']))
-    elif request.method == 'POST' and request.form.get('username') == 'vlad' and request.form.get('password') == '123':  # if user in DB
-        session['userLogged'] = request.form['username']
-        response = make_response(redirect(url_for('profile', username=session['userLogged'])))
-        response.set_cookie('logged', 'yes', 60)  # 60 sec
-        return response
+    if session.get(COOKIE_LOGGED) and request.cookies.get('logged'):
+        return redirect(url_for('profile', username=session[COOKIE_LOGGED]))
+    elif request.method == 'POST':
+        email = request.form.get('email')
+        user, msg = APP_DATABASE.getUser(email, request.form.get('password'))
+        if user is not None:
+            username = user['name']
+            flash('Login succeed', 'success')
+            session[COOKIE_LOGGED] = username
+            response = make_response(redirect(url_for('profile', username=username)))
+            response.set_cookie('logged', 'yes', 60)  # 60 sec
+            return response
+        else:
+            flash(f'Login error: {msg}', 'error')
 
     context = {'menu': APP_DATABASE.getMenu(), 'title': 'Login'}
     return render_template('login.html', **context)

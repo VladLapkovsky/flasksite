@@ -2,9 +2,18 @@
 
 {% block content %}
 {{ super() }}
+
+{% for category, msg in get_flashed_messages(with_categories=True) %}
+    <div class="flash {{ category }}">{{ msg }}</div>
+{% endfor %}
+
 <form action="{{ url_for('login') }}" method="post" class="form-contact">
-    <p><label>Name: </label><input type="text" name="username" value="" required />
+    <p><label>Email: </label><input type="text" name="email" value="" required />
     <p><label>Password: </label><input type="text" name="password" value="" required />
-    <p><input type="submit" value="Send" />
+    <p><input type="checkbox" name="remainme" /> Remember me
+    <p><input type="submit" value="Log in" />
+
+    <hr align="left" width="300px">
+    <p><a href="{{ url_for('register') }}">Register?</a></p>
 </form>
 {% endblock %}

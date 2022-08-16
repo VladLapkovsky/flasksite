@@ -1,5 +1,8 @@
 from credentials import PROJECT_SECRET_KEY
 
+APP_DATABASE = None
+COOKIE_LOGGED = 'emailLogged'
+
 
 class Config:
     DEBUG = True
