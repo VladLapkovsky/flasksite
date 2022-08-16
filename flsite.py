@@ -1,7 +1,7 @@
 import os
 from db import create_db, connect_db
 from flask import (
-    Flask, render_template, url_for, request, session, flash, redirect, abort, g
+    Flask, render_template, url_for, request, session, flash, redirect, abort, g, make_response
 )
 from FDataBase import FDataBase
 
@@ -32,10 +32,58 @@ def current_db():
     return FDataBase(db)
 
 
+# @app.route('/')
+# def index():
+#     context = {'menu': current_db().getMenu(), 'title': 'Home', 'posts': current_db().getPostsAnnounce()}
+#     content = render_template('index.html', **context)
+#     response = make_response(content)
+    # response.headers['Content-Type'] = 'text/plain'
+    # response.headers['Server'] = 'flasksite'
+
+    # response = make_response(content, 500)  # 500 is response code
+
+    # img = None
+    # with app.open_resource(''.join((app.root_path, '/static/images/default.png')), mode='rb') as f:
+    #     img = f.read()
+    # if img is None:
+    #     return  'No image'
+    # response = make_response(img)
+    # response.headers['Content-Type'] = 'image.png'
+    # return response
+    # return "<h1>Home</h1>", 200, {'Content-Type': 'text/plain'}
+
+
+# @app.route('/')
+# def index():
+#     return redirect(url_for('about'), code=302 )
+
+
 @app.route('/')
 def index():
     context = {'menu': current_db().getMenu(), 'title': 'Home', 'posts': current_db().getPostsAnnounce()}
-    return render_template('index.html', **context)
+    content = render_template('index.html', **context)
+
+    response = make_response(content)
+    response.headers['Content-Type'] = 'text/html'
+    response.headers['Server'] = 'flasksite'
+    return response
+
+
+@app.before_request
+def before_my_request():
+    print('app.before_request: before_my_request() called')
+
+
+@app.after_request
+def after_my_request(response):
+    print('app.after_request: after_my_request() called')
+    return response
+
+
+@app.teardown_request
+def teardown__my_request(response):
+    print('app.teardown__my_request: teardown__my_request() called')
+    return response
 
 
 @app.route('/add_post', methods=['POST', 'GET'])
