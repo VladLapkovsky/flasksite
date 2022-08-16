@@ -5,6 +5,8 @@ from flask import (
 )
 from FDataBase import FDataBase
 
+APP_DATABASE = None
+
 app = Flask(__name__)
 app.config.from_object('config.Config')
 
@@ -25,11 +27,6 @@ def close_db(error):
     # close DB connection
     if hasattr(g, 'link_db'):
         g.link_db.close()
-
-
-def current_db():
-    db = get_db()
-    return FDataBase(db)
 
 
 # @app.route('/')
@@ -78,7 +75,7 @@ def index():
         session.modified = True
     else:
         session['visits'] = [1]
-    context = {'menu': current_db().getMenu(), 'title': 'Home', 'posts': current_db().getPostsAnnounce(), 'visits': session['visits']}
+    context = {'menu': APP_DATABASE.getMenu(), 'title': 'Home', 'posts': APP_DATABASE.getPostsAnnounce(), 'visits': session['visits']}
     content = render_template('index.html', **context)
 
     response = make_response(content)
@@ -88,8 +85,10 @@ def index():
 
 
 @app.before_request
-def before_my_request():
-    print('app.before_request: before_my_request() called')
+def set_app_database():
+    global APP_DATABASE
+    db = get_db()
+    APP_DATABASE = FDataBase(db)
 
 
 @app.after_request
@@ -111,29 +110,29 @@ def add_post():
         post_content = request.form.get('post_content')
         post_url = request.form.get('post_url')
         if post_title and post_content:
-            is_post_added = current_db().addPost(post_title, post_content, post_url)
+            is_post_added = APP_DATABASE.addPost(post_title, post_content, post_url)
             if is_post_added is True:
                 flash('Post added', category='success')
             else:
                 flash('Post adding error', category='error')
 
-    context = {'menu': current_db().getMenu(), 'title': 'Add post'}
+    context = {'menu': APP_DATABASE.getMenu(), 'title': 'Add post'}
     return render_template('add_post.html', **context)
 
 
 @app.route('/post/<string:post_url>')
 def show_post(post_url):
-    post_title, post_content = current_db().getPost(post_url)
+    post_title, post_content = APP_DATABASE.getPost(post_url)
     if not post_title:
         abort(404)
 
-    context = {'menu': current_db().getMenu(), 'title': post_title, 'post_content': post_content}
+    context = {'menu': APP_DATABASE.getMenu(), 'title': post_title, 'post_content': post_content}
     return render_template('post.html', **context)
 
 
 @app.route('/about')
 def about():
-    context = {'menu': current_db().getMenu(), 'title': 'About'}
+    context = {'menu': APP_DATABASE.getMenu(), 'title': 'About'}
     return render_template('about.html', **context)
 
 
@@ -141,7 +140,7 @@ def about():
 def profile(username):
     if 'userLogged' not in session or session.get('userLogged') != username:
         abort(401)
-    context = {'menu': current_db().getMenu(), 'title': 'Profile', 'username': username}
+    context = {'menu': APP_DATABASE.getMenu(), 'title': 'Profile', 'username': username}
     return render_template('profile.html', **context)
 
 
@@ -153,7 +152,7 @@ def contact():
         else:
             flash('Sending error', category='error')
 
-    context = {'menu': current_db().getMenu(), 'title': 'Contact-us'}
+    context = {'menu': APP_DATABASE.getMenu(), 'title': 'Contact-us'}
     return render_template('contact.html', **context)
 
 
@@ -167,7 +166,7 @@ def login():
         response.set_cookie('logged', 'yes', 60)  # 60 sec
         return response
 
-    context = {'menu': current_db().getMenu(), 'title': 'Login'}
+    context = {'menu': APP_DATABASE.getMenu(), 'title': 'Login'}
     return render_template('login.html', **context)
 
 
@@ -180,7 +179,7 @@ def logout():
 
 @app.errorhandler(404)
 def page_not_found(error):
-    context = {'menu': current_db().getMenu(), 'title': 'Page not found'}
+    context = {'menu': APP_DATABASE.getMenu(), 'title': 'Page not found'}
     return render_template('page404.html', **context), 404
 
 
