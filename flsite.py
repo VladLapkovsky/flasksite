@@ -60,7 +60,8 @@ def current_db():
 
 @app.route('/')
 def index():
-    context = {'menu': current_db().getMenu(), 'title': 'Home', 'posts': current_db().getPostsAnnounce()}
+    is_logged = request.cookies.get('logged')
+    context = {'menu': current_db().getMenu(), 'title': 'Home', 'posts': current_db().getPostsAnnounce(), 'logged': is_logged}
     content = render_template('index.html', **context)
 
     response = make_response(content)
@@ -141,14 +142,24 @@ def contact():
 
 @app.route('/login', methods=['POST', 'GET'])
 def login():
-    if 'userLogged' in session:
+    cookies_logged = request.cookies.get('logged')
+    if cookies_logged:
         return redirect(url_for('profile', username=session['userLogged']))
     elif request.method == 'POST' and request.form.get('username') == 'vlad' and request.form.get('password') == '123':  # if user in DB
         session['userLogged'] = request.form['username']
-        return redirect(url_for('profile', username=session['userLogged']))
+        response = make_response(redirect(url_for('profile', username=session['userLogged'])))
+        response.set_cookie('logged', 'yes', 60)  # 60 sec
+        return response
 
     context = {'menu': current_db().getMenu(), 'title': 'Login'}
     return render_template('login.html', **context)
+
+
+@app.route('/logout', methods=['POST', 'GET'])
+def logout():
+    response = make_response(redirect(url_for('index')))
+    response.delete_cookie('logged')
+    return response
 
 
 @app.errorhandler(404)

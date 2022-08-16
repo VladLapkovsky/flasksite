@@ -3,6 +3,7 @@
 {% block content %}
 {{ super() }}
 <hr>
+<p>{{ logged }}</p>
 <h2>Posts List</h2>
 <ul class="list-posts">
     {% for post in posts %}
