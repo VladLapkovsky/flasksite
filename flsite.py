@@ -58,10 +58,27 @@ def current_db():
 #     return redirect(url_for('about'), code=302 )
 
 
+# @app.route('/')
+# def index():
+#     is_logged = request.cookies.get('logged')
+#     context = {'menu': current_db().getMenu(), 'title': 'Home', 'posts': current_db().getPostsAnnounce(), 'logged': is_logged}
+#     content = render_template('index.html', **context)
+#
+#     response = make_response(content)
+#     response.headers['Content-Type'] = 'text/html'
+#     response.headers['Server'] = 'flasksite'
+#     return response
+
+
 @app.route('/')
 def index():
-    is_logged = request.cookies.get('logged')
-    context = {'menu': current_db().getMenu(), 'title': 'Home', 'posts': current_db().getPostsAnnounce(), 'logged': is_logged}
+    session.permanent = True
+    if 'visits' in session:
+        session['visits'][0] += 1
+        session.modified = True
+    else:
+        session['visits'] = [1]
+    context = {'menu': current_db().getMenu(), 'title': 'Home', 'posts': current_db().getPostsAnnounce(), 'visits': session['visits']}
     content = render_template('index.html', **context)
 
     response = make_response(content)
@@ -142,8 +159,7 @@ def contact():
 
 @app.route('/login', methods=['POST', 'GET'])
 def login():
-    cookies_logged = request.cookies.get('logged')
-    if cookies_logged:
+    if session.get('userLogged') and request.cookies.get('logged'):
         return redirect(url_for('profile', username=session['userLogged']))
     elif request.method == 'POST' and request.form.get('username') == 'vlad' and request.form.get('password') == '123':  # if user in DB
         session['userLogged'] = request.form['username']

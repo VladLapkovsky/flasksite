@@ -9,6 +9,7 @@ class Config:
     FLASK_SECRET = SECRET_KEY
     DATABASE = '/tmp/flstie.db'
     # DB_HOST = 'database'  # a docker link
+    PERMANENT_SESSION_LIFETIME = 10  # session life time if user doesn't do anything
 
 
 class ProductionConfig(Config):

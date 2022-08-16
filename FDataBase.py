@@ -3,7 +3,7 @@ import re
 import sqlite3
 import time
 
-from flask import url_for, request
+from flask import url_for, request, session
 
 
 class FDataBase:
@@ -14,8 +14,7 @@ class FDataBase:
     def getMenu(self):
         # sql_query = 'SELECT * FROM mainmenu'
 
-        is_logged = request.cookies.get('logged')
-        if is_logged:
+        if session.get('userLogged') and request.cookies.get('logged'):
             sql_query = 'SELECT * FROM mainmenu'
         else:
             sql_query = 'SELECT * FROM mainmenu WHERE NOT `url` LIKE "/logout"'
