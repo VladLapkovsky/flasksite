@@ -7,13 +7,13 @@
     <div class="flash {{ category }}">{{ msg }}</div>
 {% endfor %}
 
-<form action="{{ url_for('login') }}" method="post" class="form-contact">
+<form action="" method="post" class="form-contact">
     <p><label>Email: </label><input type="text" name="email" value="" required />
     <p><label>Password: </label><input type="text" name="password" value="" required />
     <p><input type="checkbox" name="remainme" /> Remember me
     <p><input type="submit" value="Log in" />
 
     <hr align="left" width="300px">
-    <p><a href="{{ url_for('register') }}">Register?</a></p>
+    <p><a href="{{ url_for('register', next=destination) }}">Register?</a></p>
 </form>
 {% endblock %}

@@ -178,10 +178,19 @@ def register():
                 msg = "Passwords don't match"
             else:
                 hashed_password = generate_password_hash(password1)
-                user_added, msg = APP_DATABASE.addUser(username, email, hashed_password)
-                if user_added is True:
+                is_user_added, msg = APP_DATABASE.addUser(username, email, hashed_password)
+                if is_user_added is True:
+                    user = APP_DATABASE.getUserByEmail(email)
+                    if user is not None:
+
+                        if current_user.is_authenticated:
+                            logout_user()
+
+                        user_login = UserLogin().login_user(user)
+                        login_user(user_login)
+
                     flash('Registration succeed', 'success')
-                    return redirect(url_for('login'))
+                    return redirect(request.args.get('next') or url_for('login'))
             flash(f'Registration error: {msg}', 'error')
 
         else:
@@ -210,15 +219,13 @@ def login():
 
             flash('Login succeed', 'success')
             # session[COOKIE_LOGGED] = username
-            response = make_response(redirect(url_for('profile')))
+            response = make_response(redirect(request.args.get('next') or url_for('profile')))
             # response.set_cookie('logged', 'yes', 60)  # 60 sec
             return response
         else:
             flash(f'Login error: wrong login or password', 'error')
 
-
-
-    context = {'menu': APP_DATABASE.getMenu(), 'title': 'Login'}
+    context = {'menu': APP_DATABASE.getMenu(), 'title': 'Login', 'destination': request.args.get('next')}
     return render_template('login.html', **context)
 
 

@@ -2,5 +2,10 @@
 
 {% block content %}
 {{ super() }}
+
+{% for category, msg in get_flashed_messages(with_categories=True) %}
+    <div class="flash {{ category }}">{{ msg }}</div>
+{% endfor %}
+
 {{ post_content | safe }}
 {% endblock %}
