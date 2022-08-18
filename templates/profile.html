@@ -7,5 +7,7 @@
     <div class="flash {{ category }}">{{ msg }}</div>
 {% endfor %}
 
-<p>User: {{ username }} </p>
+<p>User id: {{ current_user.get_id() }} </p>
+<p>User name: {{ current_user.get_name() }} </p>
+
 {% endblock %}

@@ -1,11 +1,14 @@
 import os
-from db import create_db, connect_db
 from flask import (
     Flask, render_template, url_for, request, session, flash, redirect, abort, g, make_response
 )
-from FDataBase import FDataBase
+from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
-from config import APP_DATABASE, COOKIE_LOGGED
+
+from db import create_db, connect_db
+from config import APP_DATABASE
+from FDataBase import FDataBase
+from UserLogin import UserLogin
 
 
 app = Flask(__name__)
@@ -14,6 +17,16 @@ app.config.from_object('config.Config')
 app.config.update(dict(DATABASE=os.path.join(app.root_path, 'flsite.db')))
 if not os.path.exists(os.path.join(app.root_path, 'flsite.db')):
     create_db(app, os.path.join(app.root_path, 'sq_db.sql'))
+
+LOGIN_MANAGER = LoginManager(app)
+LOGIN_MANAGER.login_view = 'login'
+LOGIN_MANAGER.login_message_category = 'error'
+
+
+@LOGIN_MANAGER.user_loader
+def load_user(user_id):
+    print('load_user')
+    return UserLogin().fromDB(user_id, APP_DATABASE)
 
 
 def get_db():
@@ -70,13 +83,14 @@ def close_db(error):
 
 @app.route('/')
 def index():
-    session.permanent = True
-    if 'visits' in session:
-        session['visits'][0] += 1
-        session.modified = True
-    else:
-        session['visits'] = [1]
-    context = {'menu': APP_DATABASE.getMenu(), 'title': 'Home', 'posts': APP_DATABASE.getPostsAnnounce(), 'visits': session['visits']}
+    # session.permanent = True
+    # if 'visits' in session:
+    #     session['visits'][0] += 1
+    #     session.modified = True
+    # else:
+    #     session['visits'] = [1]
+    # context = {'menu': APP_DATABASE.getMenu(), 'title': 'Home', 'posts': APP_DATABASE.getPostsAnnounce(), 'visits': session['visits']}
+    context = {'menu': APP_DATABASE.getMenu(), 'title': 'Home', 'posts': APP_DATABASE.getPostsAnnounce()}
     content = render_template('index.html', **context)
 
     response = make_response(content)
@@ -92,36 +106,38 @@ def set_app_database():
     APP_DATABASE = FDataBase(db)
 
 
-@app.after_request
-def after_my_request(response):
-    print('app.after_request: after_my_request() called')
-    return response
-
-
-@app.teardown_request
-def teardown__my_request(response):
-    print('app.teardown__my_request: teardown__my_request() called')
-    return response
+# @app.after_request
+# def after_my_request(response):
+#     print('app.after_request: after_my_request() called')
+#     return response
+#
+#
+# @app.teardown_request
+# def teardown__my_request(response):
+#     print('app.teardown__my_request: teardown__my_request() called')
+#     return response
 
 
 @app.route('/add_post', methods=['POST', 'GET'])
+@login_required
 def add_post():
     if request.method == 'POST':
         post_title = request.form.get('post_title')
         post_content = request.form.get('post_content')
         post_url = request.form.get('post_url')
         if post_title and post_content:
-            is_post_added = APP_DATABASE.addPost(post_title, post_content, post_url)
+            is_post_added, msg = APP_DATABASE.addPost(post_title, post_content, post_url)
             if is_post_added is True:
-                flash('Post added', category='success')
+                flash(f'Post added {msg}', category='success')
             else:
-                flash('Post adding error', category='error')
+                flash(f'Post adding error: {msg}', category='error')
 
     context = {'menu': APP_DATABASE.getMenu(), 'title': 'Add post'}
     return render_template('add_post.html', **context)
 
 
 @app.route('/post/<string:post_url>')
+@login_required
 def show_post(post_url):
     post_title, post_content = APP_DATABASE.getPost(post_url)
     if not post_title:
@@ -135,14 +151,6 @@ def show_post(post_url):
 def about():
     context = {'menu': APP_DATABASE.getMenu(), 'title': 'About'}
     return render_template('about.html', **context)
-
-
-@app.route('/profile/<username>')
-def profile(username):
-    if COOKIE_LOGGED not in session or session.get(COOKIE_LOGGED) != username:
-        abort(401)
-    context = {'menu': APP_DATABASE.getMenu(), 'title': 'Profile', 'username': username}
-    return render_template('profile.html', **context)
 
 
 @app.route('/contact', methods=['POST', 'GET'])
@@ -159,7 +167,6 @@ def contact():
 
 @app.route('/register', methods=['POST', 'GET'])
 def register():
-    print(request.method)
     if request.method == 'POST':
         username = request.form.get('username')
         email = request.form.get('email')
@@ -185,30 +192,63 @@ def register():
 
 @app.route('/login', methods=['POST', 'GET'])
 def login():
-    if session.get(COOKIE_LOGGED) and request.cookies.get('logged'):
-        return redirect(url_for('profile', username=session[COOKIE_LOGGED]))
-    elif request.method == 'POST':
+    if request.method == 'GET' and current_user.is_authenticated:
+        return redirect(url_for('profile'))
+    # if session.get(COOKIE_LOGGED) and request.cookies.get('logged'):
+    #     return redirect(url_for('profile', username=session[COOKIE_LOGGED]))
+    if request.method == 'POST':
         email = request.form.get('email')
-        user, msg = APP_DATABASE.getUser(email, request.form.get('password'))
-        if user is not None:
-            username = user['name']
+        password = request.form.get('password')
+
+        user = APP_DATABASE.getUserByEmail(email)
+
+        if user is not None and check_password_hash(user['password'], password):
+            remainme = True if request.form.get('remainme') else False
+
+            user_login = UserLogin().login_user(user)
+            login_user(user_login, remember=remainme)
+
             flash('Login succeed', 'success')
-            session[COOKIE_LOGGED] = username
-            response = make_response(redirect(url_for('profile', username=username)))
-            response.set_cookie('logged', 'yes', 60)  # 60 sec
+            # session[COOKIE_LOGGED] = username
+            response = make_response(redirect(url_for('profile')))
+            # response.set_cookie('logged', 'yes', 60)  # 60 sec
             return response
         else:
-            flash(f'Login error: {msg}', 'error')
+            flash(f'Login error: wrong login or password', 'error')
+
+
 
     context = {'menu': APP_DATABASE.getMenu(), 'title': 'Login'}
     return render_template('login.html', **context)
 
 
-@app.route('/logout', methods=['POST', 'GET'])
+@app.route('/logout')
 def logout():
-    response = make_response(redirect(url_for('index')))
-    response.delete_cookie('logged')
+    logout_user()
+    flash('You are logged out', 'success')
+    response = make_response(redirect(url_for('login')))
+    # response.delete_cookie('logged')
     return response
+
+
+# @app.route('/profile/<username>')
+# def profile(username):
+#     if COOKIE_LOGGED not in session or session.get(COOKIE_LOGGED) != username:
+#         abort(401)
+#     context = {'menu': APP_DATABASE.getMenu(), 'title': 'Profile', 'username': username}
+#     return render_template('profile.html', **context)
+
+
+@app.route('/profile')
+@login_required
+def profile():
+    context = {'menu': APP_DATABASE.getMenu(), 'title': 'Profile', 'current_user': current_user}
+
+    return render_template('profile.html', **context)
+#     return f"""
+#     <p><a href="{url_for('logout')}">Logout</a>
+#     <p> user info: {current_user.get_ud()}
+# """
 
 
 @app.errorhandler(404)

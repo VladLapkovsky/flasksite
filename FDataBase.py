@@ -5,9 +5,8 @@ import time
 import typing
 
 from flask import url_for, request, session
+from flask_login import current_user
 from werkzeug.security import check_password_hash
-
-from config import COOKIE_LOGGED
 
 
 class SQLError(Exception):
@@ -20,7 +19,8 @@ class FDataBase:
         self.__cursor = db.cursor()
 
     def getMenu(self):
-        if session.get(COOKIE_LOGGED) and request.cookies.get('logged'):
+        if current_user.is_authenticated:
+        # if session.get(COOKIE_LOGGED) and request.cookies.get('logged'):
             sql_query = 'SELECT * FROM mainmenu'
         else:
             sql_query = f"""SELECT * FROM mainmenu WHERE NOT url LIKE '{url_for("logout")}'"""
@@ -80,50 +80,24 @@ class FDataBase:
 
         return True, 'Registration succeed'
 
-    # def getUserByID(self, user_id):
-    #     sql_query = f"SELECT * FROM users WHERE id = {user_id} LIMIT 1"
-    #     try:
-    #         if not self._is_email_exists(email):
-    #             return None, "User with email doesn't exist"
-    #         user = self._get_user_from_db(email)
-    #         if not check_password_hash(user['password'], inputted_password):
-    #             return None, "Wrong password"
-    #     except SQLError as error:
-    #         return None, error.args[0]  # get Exception message
-    #     else:
-    #         return user, ''
+    def getUserByID(self, user_id):
+        sql_query = f"SELECT * FROM users WHERE id = {user_id} LIMIT 1"
 
-        # try:
-        #     if not self._is_email_exists(email):
-        #         return None, "User with email doesn't exist"
-        #     user = self._get_user_from_db_by_email(email)
-        #     if not check_password_hash(user['password'], inputted_password):
-        #         return None, "Wrong password"
-        # except SQLError as error:
-        #     return None, error.args[0]  # get Exception message
-        # else:
+        execute_error, user = self._execute_sql_and_fetch_one(sql_query)
+        if execute_error is None and user is not None:
+            return user
+        return None
 
-    def getUserFromLogin(self, email, inputted_password) -> typing.Tuple[typing.Optional[sqlite3.Row], str]:
-        if not self._is_email_exists(email):
-            return None, "User with email doesn't exist"
-
-        user = self._get_user_from_db_by_email(email)
-        if user is not None:
-            if not check_password_hash(user['password'], inputted_password):
-                return None, "Wrong password"
-            else:
-                return user, ''
-        else:
-            return None, f"There is no user related with {email}"
+    def getUserByEmail(self, email) -> typing.Optional[sqlite3.Row]:
+        return self._get_user_from_db_by_email(email)
 
     def _is_email_exists(self, email):
         is_exists = False
         sql_query = f"SELECT COUNT() as `count` FROM users WHERE email LIKE '{email}'"
 
-        self._execute_sql_query(sql_query)
-        sql_result = self._fetch_one_from_db()
+        execute_error, result = self._execute_sql_and_fetch_one(sql_query)
 
-        if sql_result['count'] > 0:
+        if execute_error is None and result is not None and result['count'] > 0:
             is_exists = True
         return is_exists
 
@@ -157,7 +131,7 @@ class FDataBase:
 
         execute_error, result = self._execute_sql_and_fetch_one(sql_query)
 
-        if execute_error is not None and result is not None and result['count'] > 0:
+        if execute_error is None and result is not None and result['count'] > 0:
             return True
         return False
 

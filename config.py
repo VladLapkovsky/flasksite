@@ -1,7 +1,7 @@
 from credentials import PROJECT_SECRET_KEY
 
 APP_DATABASE = None
-COOKIE_LOGGED = 'emailLogged'
+# COOKIE_LOGGED = 'emailLogged'
 
 
 class Config:
@@ -12,7 +12,7 @@ class Config:
     FLASK_SECRET = SECRET_KEY
     DATABASE = '/tmp/flstie.db'
     # DB_HOST = 'database'  # a docker link
-    PERMANENT_SESSION_LIFETIME = 10  # session life time if user doesn't do anything
+    # PERMANENT_SESSION_LIFETIME = 10  # session life time if user doesn't do anything
 
 
 class ProductionConfig(Config):
