@@ -8,10 +8,31 @@
 {% endfor %}
 
 <form action="" method="post" class="form-contact">
-    <p><label>Name: </label><input type="text" name="username" value="" required />
-    <p><label>Email: </label><input type="text" name="email" value="" required />
-    <p><label>Password: </label><input type="text" name="password1" value="" required />
-    <p><label>Repeat password: </label><input type="text" name="password2" value="" required />
-    <p><input type="submit" value="Register" />
+    <!--    CSRF protection-->
+    {{ form.hidden_tag() }}
+
+    {% for form_field in form if form_field.name not in ('csrf_token', 'submit') %}
+    <p>
+        {{ form_field.label() }}
+        {% if form_field.errors %}
+            {{ form_field(class="invalid") }}
+            <span class="invalid-feedback">
+                {% for error in form_field.errors %}
+                    {{ error }}
+                {% endfor %}
+            </span>
+        {% else %}
+            {{ form_field() }}
+        {% endif %}
+    </p>
+    {% endfor %}
+
+<!--    <p><label>Name: </label><input type="text" name="username" value="" required />-->
+<!--    <p><label>Email: </label><input type="text" name="email" value="" required />-->
+<!--    <p><label>Password: </label><input type="text" name="password1" value="" required />-->
+<!--    <p><label>Repeat password: </label><input type="text" name="password2" value="" required />-->
+
+    <p>{{ form.submit() }}
+<!--    <p><input type="submit" value="Register" />-->
 </form>
 {% endblock %}

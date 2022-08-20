@@ -9,7 +9,7 @@ from db import create_db, connect_db
 from config import APP_DATABASE
 from FDataBase import FDataBase
 from UserLogin import UserLogin
-from forms import LoginForm
+from forms import LoginForm, RegisterForm
 
 
 app = Flask(__name__)
@@ -167,35 +167,58 @@ def contact():
 
 @app.route('/register', methods=['POST', 'GET'])
 def register():
-    if request.method == 'POST':
-        username = request.form.get('username')
-        email = request.form.get('email')
-        password1 = request.form.get('password1')
-        password2 = request.form.get('password2')
-        if username and email:
-            msg = ''
-            if password1 != password2:
-                msg = "Passwords don't match"
-            else:
-                hashed_password = generate_password_hash(password1)
-                is_user_added, msg = APP_DATABASE.addUser(username, email, hashed_password)
-                if is_user_added is True:
-                    user = APP_DATABASE.getUserByEmail(email)
-                    if user is not None:
+    register_form = RegisterForm()
 
-                        if current_user.is_authenticated:
-                            logout_user()
+    if register_form.validate_on_submit():
+        name = register_form.name.data
+        email = register_form.email.data
+        hashed_password = generate_password_hash(register_form.password.data)
 
-                        user_login = UserLogin().login_user(user)
-                        login_user(user_login)
+        is_user_added, error_msg = APP_DATABASE.add_user_with_email_check(name, email, hashed_password)
+        if is_user_added is True:
+            user = APP_DATABASE.getUserByEmail(email)
+            if user is not None:
+                if current_user.is_authenticated:
+                    logout_user()
 
-                    flash('Registration succeed', 'success')
-                    return redirect(request.args.get('next') or url_for('login'))
-            flash(f'Registration error: {msg}', 'error')
+                user_login = UserLogin().login_user(user)
+                login_user(user_login)
 
+                flash('Registration succeed', 'success')
+                return redirect(request.args.get('next') or url_for('login'))
         else:
-            flash('Wrong filled fields', 'error')
-    context = {'menu': APP_DATABASE.getMenu(), 'title': 'Register'}
+            flash(f'Registration error: {error_msg}', 'error')
+
+    # if request.method == 'POST':
+    #     username = request.form.get('username')
+    #     email = request.form.get('email')
+    #     password1 = request.form.get('password1')
+    #     password2 = request.form.get('password2')
+    #     if username and email:
+    #         msg = ''
+    #         if password1 != password2:
+    #             msg = "Passwords don't match"
+    #         else:
+    #             hashed_password = generate_password_hash(password1)
+    #             is_user_added, msg = APP_DATABASE.addUser(username, email, hashed_password)
+    #             if is_user_added is True:
+    #                 user = APP_DATABASE.getUserByEmail(email)
+    #                 if user is not None:
+    #
+    #                     if current_user.is_authenticated:
+    #                         logout_user()
+    #
+    #                     user_login = UserLogin().login_user(user)
+    #                     login_user(user_login)
+    #
+    #                 flash('Registration succeed', 'success')
+    #                 return redirect(request.args.get('next') or url_for('login'))
+    #         flash(f'Registration error: {msg}', 'error')
+    #
+    #     else:
+    #         flash('Wrong filled fields', 'error')
+
+    context = {'menu': APP_DATABASE.getMenu(), 'title': 'Register', 'form': register_form}
     return render_template('register.html', **context)
 
 

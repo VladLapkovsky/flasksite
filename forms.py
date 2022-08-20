@@ -11,10 +11,14 @@ class LoginForm(FlaskForm):
 
 
 class RegisterForm(FlaskForm):
-    name = StringField('Name: ')
+    name = StringField('Name: ', validators=[Length(min=4, max=10)])
     email = StringField('Email: ', validators=[Email()])
     password = PasswordField(
         'Password: ',
-        validators=[InputRequired(), Length(min=2, max=3), EqualTo('confirm', message='Passwords must match')]
+        validators=[InputRequired(), Length(min=4, max=5), EqualTo('confirm', message='Passwords must match')]
     )
-    confirm = PasswordField('Repeat password: ')
+    confirm = PasswordField(
+        'Repeat password: ',
+        validators=[InputRequired(), EqualTo('password', message='Passwords must match')]
+    )
+    submit = SubmitField('Register')

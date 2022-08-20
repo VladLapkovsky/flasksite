@@ -70,15 +70,20 @@ class FDataBase:
 
         return result if result is not None else []
 
-    def addUser(self, username, email, hashed_password) -> typing.Tuple[bool, str]:
+    def add_user_with_email_check(self, username, email, hashed_password) -> typing.Tuple[bool, str]:
         if self._is_email_exists(email) is True:
             return False, 'User with this email already exists'
 
-        is_added = self._add_user_to_db(username, email, hashed_password)
-        if is_added is False:
-            return False, "User wasn't added, try again"  # get Exception message
+        return self.addUser(username, email, hashed_password)
 
-        return True, 'Registration succeed'
+    def addUser(self, username, email, hashed_password) -> typing.Tuple[bool, str]:
+        error_msg = ''
+        is_added = self._add_user_to_db(username, email, hashed_password)
+
+        if is_added is False:
+            error_msg = "User wasn't added, try again"
+
+        return is_added, error_msg
 
     def getUserByID(self, user_id):
         sql_query = f"SELECT * FROM users WHERE id = {user_id} LIMIT 1"
