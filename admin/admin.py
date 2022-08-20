@@ -1,14 +1,32 @@
-from flask import Blueprint, request, redirect, url_for, render_template, flash, session
+import sqlite3
+
+from flask import Blueprint, request, redirect, url_for, render_template, flash, session, current_app, g
 
 admin = Blueprint('admin', __name__, template_folder='templates', static_folder='static')
 
 
+BLUEPRINT_DB = None
 MENU = [
     {'url': 'index', 'title': 'Back to site'},
     {'url': '.index', 'title': 'Admin Panel'},
     {'url': '.login', 'title': 'Admin Panel login'},
-    {'url': '.logout', 'title': 'Admin Panel logout'}
+    {'url': '.logout', 'title': 'Admin Panel logout'},
+    {'url': '.list_pub', 'title': 'Publication List'}
 ]
+
+
+@admin.before_request
+def connect_blueprint_db():
+    global BLUEPRINT_DB
+    BLUEPRINT_DB = g.get('link_db')
+
+
+@admin.teardown_request
+def disconnect_blueprint_db(request):
+    global BLUEPRINT_DB
+    BLUEPRINT_DB = None
+    return request
+
 
 @admin.route('/')
 def index():
@@ -60,3 +78,22 @@ def logout():
 
     return redirect(url_for('.login'))
 
+
+@admin.route('/list-pub')
+def list_pub():
+    if not is_logged():
+        return redirect(url_for('.login'))
+
+    list_of_pub = []
+    sql_query = 'SELECT title, text, url FROM posts'
+
+    if BLUEPRINT_DB is not None:
+        try:
+            cursor = BLUEPRINT_DB.cursor()
+            cursor.execute(sql_query)
+            list_of_pub = cursor.fetchall()
+        except sqlite3.Error as e:
+            flash(f'Error occurs while getting post list from db: {e}', 'error')
+
+    context = {'title': 'Publication List', 'menu': MENU, 'list_of_pub': list_of_pub}
+    return render_template('admin/listpub.html', **context)

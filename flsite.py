@@ -15,8 +15,10 @@ from admin.admin import admin
 app = Flask(__name__)
 app.config.from_object('config.Config')
 
-app.config.update(dict(DATABASE=os.path.join(app.root_path, 'flsite.db')))
-if not os.path.exists(os.path.join(app.root_path, 'flsite.db')):
+# app.config.update(dict(DATABASE=os.path.join(app.root_path, 'flsite.db')))
+# if not os.path.exists(os.path.join(app.root_path, 'flsite.db')):
+
+if not os.path.exists(app.config.get('DATABASE_PATH')):
     create_db(app, os.path.join(app.root_path, 'sq_db.sql'))
 
 app.register_blueprint(admin, url_prefix='/admin')
@@ -34,8 +36,15 @@ def load_user(user_id):
 def get_db():
     # open DB connection
     if not hasattr(g, 'link_db'):
-        g.link_db = connect_db(app)
+        g.link_db = connect_db(app.config.get('DATABASE_PATH'))
     return g.link_db
+
+
+@app.before_request
+def set_app_database():
+    global APP_DATABASE
+    db = get_db()
+    APP_DATABASE = FDataBase(db)
 
 
 @app.teardown_appcontext
@@ -43,6 +52,18 @@ def close_db(error):
     # close DB connection
     if hasattr(g, 'link_db'):
         g.link_db.close()
+
+
+# @app.after_request
+# def after_my_request(response):
+#     print('app.after_request: after_my_request() called')
+#     return response
+#
+#
+# @app.teardown_request
+# def teardown__my_request(response):
+#     print('app.teardown__my_request: teardown__my_request() called')
+#     return response
 
 
 # @app.route('/')
@@ -92,6 +113,7 @@ def index():
     # else:
     #     session['visits'] = [1]
     # context = {'menu': APP_DATABASE.getMenu(), 'title': 'Home', 'posts': APP_DATABASE.getPostsAnnounce(), 'visits': session['visits']}
+
     context = {'menu': APP_DATABASE.getMenu(), 'title': 'Home', 'posts': APP_DATABASE.getPostsAnnounce()}
     content = render_template('index.html', **context)
 
@@ -99,25 +121,6 @@ def index():
     response.headers['Content-Type'] = 'text/html'
     response.headers['Server'] = 'flasksite'
     return response
-
-
-@app.before_request
-def set_app_database():
-    global APP_DATABASE
-    db = get_db()
-    APP_DATABASE = FDataBase(db)
-
-
-# @app.after_request
-# def after_my_request(response):
-#     print('app.after_request: after_my_request() called')
-#     return response
-#
-#
-# @app.teardown_request
-# def teardown__my_request(response):
-#     print('app.teardown__my_request: teardown__my_request() called')
-#     return response
 
 
 @app.route('/add_post', methods=['POST', 'GET'])

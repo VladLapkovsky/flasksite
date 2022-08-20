@@ -10,7 +10,8 @@ class Config:
     SECRET_KEY = PROJECT_SECRET_KEY
     FLASK_HTPASSWD_PATH = '/secret/.htpasswd'
     FLASK_SECRET = SECRET_KEY
-    DATABASE = '/tmp/flstie.db'
+    DATABASE = None
+    DATABASE_PATH = '/home/vladlapkovsky/Desktop/DjangoProjects/flasksite/flsite.db'
     MAX_CONTENT_LENGTH = 1024 * 1024  # 1 Mb
 
     # DB_HOST = 'database'  # a docker link
