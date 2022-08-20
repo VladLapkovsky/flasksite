@@ -10,7 +10,7 @@ from config import APP_DATABASE
 from FDataBase import FDataBase
 from UserLogin import UserLogin
 from forms import LoginForm, RegisterForm
-
+from admin.admin import admin
 
 app = Flask(__name__)
 app.config.from_object('config.Config')
@@ -18,6 +18,8 @@ app.config.from_object('config.Config')
 app.config.update(dict(DATABASE=os.path.join(app.root_path, 'flsite.db')))
 if not os.path.exists(os.path.join(app.root_path, 'flsite.db')):
     create_db(app, os.path.join(app.root_path, 'sq_db.sql'))
+
+app.register_blueprint(admin, url_prefix='/admin')
 
 LOGIN_MANAGER = LoginManager(app)
 LOGIN_MANAGER.login_view = 'login'
@@ -244,7 +246,7 @@ def login():
 
             response = make_response(redirect(request.args.get('next') or url_for('profile')))
             return response
-        flash(f'Login error: wrong login or password', 'error')
+        flash('Login error: wrong login or password', 'error')
 
     context = {
         'menu': APP_DATABASE.getMenu(),
