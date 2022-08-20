@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+
+{% block content %}
+{{ super() }}
+
+{% for category, msg in get_flashed_messages(with_categories=True) %}
+    <div class="flash {{ category }}">{{ msg }}</div>
+{% endfor %}
+
+<form action="" method="post" class="form-contact">
+<!--    CSRF protection-->
+    {{ form.hidden_tag() }}
+
+    {% for form_field in form if form_field.name not in ('csrf_token', 'remember', 'submit') %}
+    <p>
+        {{ form_field.label() }}
+        {% if form_field.errors %}
+            {{ form_field(class="invalid") }}
+            <span class="invalid-feedback">
+                {% for error in form_field.errors %}
+                    {{ error }}
+                {% endfor %}
+            </span>
+        {% else %}
+            {{ form_field() }}
+        {% endif %}
+    </p>
+    {% endfor %}
+
+<!--    <p>-->
+<!--        {{ form.email.label() }}-->
+<!--        {% if form.email.errors %}-->
+<!--            {{ form.email(class="invalid") }}-->
+<!--            <span class="invalid-feedback">-->
+<!--                {% for error in form.email.errors %}-->
+<!--                    {{ error }}-->
+<!--                {% endfor %}-->
+<!--            </span>-->
+<!--        {% else %}-->
+<!--            {{ form.email() }}-->
+<!--        {% endif %}-->
+<!--    </p>-->
+<!--    &lt;!&ndash;    <p><label>Email: </label><input type="text" name="email" value="" required />&ndash;&gt;-->
+
+<!--    <p>-->
+<!--        {{ form.password.label() }}-->
+<!--        {% if form.password.errors %}-->
+<!--            {{ form.password(class="invalid") }}-->
+<!--            <span class="invalid-feedback">-->
+<!--                {% for error in form.password.errors %}-->
+<!--                    {{ error }}-->
+<!--                {% endfor %}-->
+<!--            </span>-->
+<!--        {% else %}-->
+<!--            {{ form.password() }}-->
+<!--        {% endif %}-->
+<!--    </p>-->
+<!--    &lt;!&ndash;    <p><label>Password: </label><input type="text" name="password" value="" required />&ndash;&gt;-->
+
+    <p>
+        {{ form.remember.label() }}
+        {{ form.remember() }}
+    </p>
+    <!--    <p><input type="checkbox" name="remainme" /> Remember me-->
+
+    <p>
+        {{ form.submit() }}
+    </p>
+    <!--    <p><input type="submit" value="Log in" />-->
+
+    <hr align="left" width="300px">
+    <p><a href="{{ url_for('register', next=destination) }}">Register?</a></p>
+</form>
+{% endblock %}

@@ -1,0 +1,21 @@
+{% extends 'admin/base.html' %}
+
+{% block content %}
+{{ super() }}
+
+{% for category, msg in get_flashed_messages(with_categories=True) %}
+    <div class="flash {{ category }}">
+        {{ msg }}
+    </div>
+{% endfor %}
+
+<h1>{{ title }}</h1>
+<ul class="list-posts">
+    {% for user in list_of_users %}
+        <li>
+            <p class="title">{{ user.id }}: {{ user.name }}</p>
+            <p class="announce">{{ user.email }}</p>
+        </li>
+    {% endfor %}
+</ul>
+{% endblock %}

@@ -1,0 +1,6 @@
+{% extends 'base.html' %}
+
+{% block content %}
+{{ super() }}
+<p>Page not found. Return to the <a href="{{ url_for('index') }}">home page</a>?</p>
+{% endblock %}
