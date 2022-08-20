@@ -16,7 +16,14 @@ db.create_all(app=app)
 
 @app.route('/')
 def index():
-    return render_template('index.html', title='Home')
+    users = []
+    try:
+        users = Users.query.all()
+    except Exception as e:
+        flash(f'DB reading error: {e}', 'error')
+
+    context = {'title': 'Home', 'users': users}
+    return render_template('index.html', **context)
 
 
 @app.route('/register', methods=('POST', 'GET'))
@@ -31,7 +38,7 @@ def register():
             db.session.flush()
 
             profile = Profiles(
-                email=request.form['email'],
+                name=request.form['name'],
                 age=request.form['age'],
                 city=request.form['city'],
                 user_id=user.id
@@ -41,7 +48,7 @@ def register():
 
         except Exception as e:
             db.session.rollback()
-            flash('DB adding error', 'error')
+            flash(f'DB adding error: {e}', 'error')
 
     return render_template('register.html', title='Register')
 
