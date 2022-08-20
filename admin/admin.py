@@ -92,7 +92,7 @@ def list_pub():
         try:
             cursor = BLUEPRINT_DB.cursor()
             cursor.execute(sql_query)
-            list_of_pub = cursor.fetchall()
+            list_of_pubs = cursor.fetchall()
         except sqlite3.Error as e:
             flash(f'Error occurs while getting post list from db: {e}', 'error')
 
