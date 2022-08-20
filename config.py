@@ -11,6 +11,8 @@ class Config:
     FLASK_HTPASSWD_PATH = '/secret/.htpasswd'
     FLASK_SECRET = SECRET_KEY
     DATABASE = '/tmp/flstie.db'
+    MAX_CONTENT_LENGTH = 1024 * 1024  # 1 Mb
+
     # DB_HOST = 'database'  # a docker link
     # PERMANENT_SESSION_LIFETIME = 10  # session life time if user doesn't do anything
 

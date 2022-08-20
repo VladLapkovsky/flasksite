@@ -25,7 +25,6 @@ LOGIN_MANAGER.login_message_category = 'error'
 
 @LOGIN_MANAGER.user_loader
 def load_user(user_id):
-    print('load_user')
     return UserLogin().fromDB(user_id, APP_DATABASE)
 
 
@@ -252,11 +251,38 @@ def profile():
     context = {'menu': APP_DATABASE.getMenu(), 'title': 'Profile', 'current_user': current_user}
 
     return render_template('profile.html', **context)
-#     return f"""
-#     <p><a href="{url_for('logout')}">Logout</a>
-#     <p> user info: {current_user.get_ud()}
-# """
 
+
+@app.route('/useravatar')
+def useravatar():
+    img = current_user.get_avatar(app)
+    if not img:
+        return ''
+
+    response = make_response(img)
+    response.headers['Content-Type'] = 'image/png'
+    return response
+
+
+@app.route('/upload', methods=['POST', 'GET'])
+@login_required
+def upload():
+    if request.method == 'POST':
+        file = request.files['file_name']
+        if file and current_user.verify_extension(file.filename):
+            try:
+                img = file.read()
+                result = APP_DATABASE.updateUserAvatar(img, current_user.get_id())
+                if not result:
+                    flash('Avatar updating error', 'error')
+                else:
+                    flash('Avatar updated', 'success')
+            except FileNotFoundError as e:
+                flash('Avatar file reading error', 'error')
+        else:
+            flash('Avatar updating error', 'error')
+
+    return redirect(url_for('profile'))
 
 @app.errorhandler(404)
 def page_not_found(error):

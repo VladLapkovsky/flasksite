@@ -91,6 +91,21 @@ class FDataBase:
     def getUserByEmail(self, email) -> typing.Optional[sqlite3.Row]:
         return self._get_user_from_db_by_email(email)
 
+    def updateUserAvatar(self, avatar, user_id):
+        avatar_updated = False
+
+        if not avatar:
+            return avatar_updated
+
+        binary_file = sqlite3.Binary(avatar)
+        execute_error, is_saved = self._execute_sql_and_save(
+            "UPDATE users SET avatar = ? WHERE id = ?",
+            (binary_file, user_id)
+        )
+        if execute_error is None and is_saved is True:
+            avatar_updated = True
+        return avatar_updated
+
     def _is_email_exists(self, email):
         is_exists = False
         sql_query = f"SELECT COUNT() as `count` FROM users WHERE email LIKE '{email}'"
@@ -103,7 +118,7 @@ class FDataBase:
 
     def _add_user_to_db(self, username, email, hashed_password) -> bool:
         is_added = False
-        sql_query = 'INSERT INTO users VALUES(NULL, ?, ?, ?, ?)'
+        sql_query = 'INSERT INTO users VALUES(NULL, ?, ?, ?, NULL, ?)'
         tm = math.floor(time.time())
 
         execute_error, is_saved = self._execute_sql_and_save(sql_query, (username, email, hashed_password, tm))
