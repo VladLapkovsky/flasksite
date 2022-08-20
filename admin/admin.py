@@ -11,7 +11,8 @@ MENU = [
     {'url': '.index', 'title': 'Admin Panel'},
     {'url': '.login', 'title': 'Admin Panel login'},
     {'url': '.logout', 'title': 'Admin Panel logout'},
-    {'url': '.list_pub', 'title': 'Publication List'}
+    {'url': '.list_pub', 'title': 'Publication List'},
+    {'url': '.list_users', 'title': 'User List'}
 ]
 
 
@@ -84,7 +85,7 @@ def list_pub():
     if not is_logged():
         return redirect(url_for('.login'))
 
-    list_of_pub = []
+    list_of_pubs = []
     sql_query = 'SELECT title, text, url FROM posts'
 
     if BLUEPRINT_DB is not None:
@@ -95,5 +96,25 @@ def list_pub():
         except sqlite3.Error as e:
             flash(f'Error occurs while getting post list from db: {e}', 'error')
 
-    context = {'title': 'Publication List', 'menu': MENU, 'list_of_pub': list_of_pub}
-    return render_template('admin/listpub.html', **context)
+    context = {'title': 'Publication List', 'menu': MENU, 'list_of_pubs': list_of_pubs}
+    return render_template('admin/listpubs.html', **context)
+
+
+@admin.route('/list-users')
+def list_users():
+    if not is_logged():
+        return redirect(url_for('.login'))
+
+    list_of_users = []
+    sql_query = 'SELECT id, name, email FROM users'
+
+    if BLUEPRINT_DB is not None:
+        try:
+            cursor = BLUEPRINT_DB.cursor()
+            cursor.execute(sql_query)
+            list_of_users = cursor.fetchall()
+        except sqlite3.Error as e:
+            flash(f'Error occurs while getting post list from db: {e}', 'error')
+
+    context = {'title': 'User List', 'menu': MENU, 'list_of_users': list_of_users}
+    return render_template('admin/listusers.html', **context)
