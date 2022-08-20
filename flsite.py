@@ -9,6 +9,7 @@ from db import create_db, connect_db
 from config import APP_DATABASE
 from FDataBase import FDataBase
 from UserLogin import UserLogin
+from forms import LoginForm
 
 
 app = Flask(__name__)
@@ -204,28 +205,53 @@ def login():
         return redirect(url_for('profile'))
     # if session.get(COOKIE_LOGGED) and request.cookies.get('logged'):
     #     return redirect(url_for('profile', username=session[COOKIE_LOGGED]))
-    if request.method == 'POST':
-        email = request.form.get('email')
-        password = request.form.get('password')
+
+    login_form = LoginForm()
+    if login_form.validate_on_submit():  # -> if request.method == 'POST' and validate:
+        email = login_form.email.data
+        password = login_form.password.data
 
         user = APP_DATABASE.getUserByEmail(email)
 
         if user is not None and check_password_hash(user['password'], password):
-            remainme = True if request.form.get('remainme') else False
-
             user_login = UserLogin().login_user(user)
-            login_user(user_login, remember=remainme)
+            login_user(user_login, remember=login_form.remember.data)
 
             flash('Login succeed', 'success')
-            # session[COOKIE_LOGGED] = username
-            response = make_response(redirect(request.args.get('next') or url_for('profile')))
-            # response.set_cookie('logged', 'yes', 60)  # 60 sec
-            return response
-        else:
-            flash(f'Login error: wrong login or password', 'error')
 
-    context = {'menu': APP_DATABASE.getMenu(), 'title': 'Login', 'destination': request.args.get('next')}
+            response = make_response(redirect(request.args.get('next') or url_for('profile')))
+            return response
+        flash(f'Login error: wrong login or password', 'error')
+
+    context = {
+        'menu': APP_DATABASE.getMenu(),
+        'title': 'Login',
+        'destination': request.args.get('next'),
+        'form': login_form
+    }
     return render_template('login.html', **context)
+    # if request.method == 'POST':
+    #     email = request.form.get('email')
+    #     password = request.form.get('password')
+    #
+    #     user = APP_DATABASE.getUserByEmail(email)
+    #
+    #     if user is not None and check_password_hash(user['password'], password):
+    #         remainme = True if request.form.get('remainme') else False
+    #
+    #         user_login = UserLogin().login_user(user)
+    #         login_user(user_login, remember=remainme)
+    #
+    #         flash('Login succeed', 'success')
+    #         # session[COOKIE_LOGGED] = username
+    #         response = make_response(redirect(request.args.get('next') or url_for('profile')))
+    #         # response.set_cookie('logged', 'yes', 60)  # 60 sec
+    #         return response
+    #     else:
+    #         flash(f'Login error: wrong login or password', 'error')
+    #
+    # context = {'menu': APP_DATABASE.getMenu(), 'title': 'Login', 'destination': request.args.get('next')}
+    # return render_template('login.html', **context)
 
 
 @app.route('/logout')
