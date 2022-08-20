@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+{% block content %}
+{{ super() }}
+
+{% for category, msg in get_flashed_messages(with_categories=True) %}
+    <div class="flash {{ category }}">
+        {{ msg }}
+    </div>
+{% endfor %}
+
+<form action="" method="post" class="form-contact">
+    <p><label>Name: </label><input type="text" name="name" value="" required></p>
+    <p><label>Age: </label><input type="text" name="age" value="" required></p>
+    <p><label>City: </label><input type="text" name="city" value="" required></p>
+    <p><label>Email: </label><input type="text" name="email" value="" required></p>
+    <p><label>Password: </label><input type="text" name="password1" value="" required></p>
+    <p><label>Repeat password: </label><input type="text" name="password2" value="" required></p>
+    <p><input type="submit" value="Register"></p>
+</form>
+
+{% endblock %}
